@@ -95,13 +95,16 @@ haplo_raster_plot <- function(D, h_ord = NULL, pos_annot, fcolors,
                               expand_width = 0.0,
                               kinky_line_size = 0.1,
                               het_outline_color = NA,
-                              het_outline_size = 1.0,
+                              het_outline_size = 1.0,  # this is now defunct.  It gets set in fcolors as Het
                               plot_read_depths = FALSE,
                               annotation_columns = NULL,
                               annotation_rows = NULL,
                               anno_row_start = 0,
                               snp_quant_tibble = NULL,
-                              sq_props = list(lo = -9, hi = -1)) {
+                              sq_props = list(lo = -9, hi = -1),
+                              no_legend = FALSE,
+                              no_y_labels = FALSE,
+                              no_x_labels = TRUE) {
 
   if(!is.null(h_ord)) {
     if(any(!(h_ord %in% unique(D$hnames)))) stop("h_ord includes names not in hnames")
@@ -128,26 +131,31 @@ haplo_raster_plot <- function(D, h_ord = NULL, pos_annot, fcolors,
   # will be different
   if(plot_read_depths == FALSE) {
   base <- ggplot2::ggplot() +
-    geom_raster(data = D2, aes(x = POSfact, y = Hfact, fill = atypes)) +
+    geom_tile(data = D2, aes(x = POSfact, y = Hfact, fill = atypes, colour = atypes)) +
     scale_fill_manual(values = fcolors) +
+    scale_colour_manual(values = fcolors) +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.background = element_blank(),
           panel.border = element_blank())
   } else {
+    loggy_breaks <- 2^(0:6)
     base <- ggplot2::ggplot() +
-      geom_raster(data = D2, aes(x = POSfact, y = Hfact, fill = DP)) +
-      scale_fill_viridis_c() +
+      geom_tile(data = D2, aes(x = POSfact, y = Hfact, fill = DP, colour = DP)) +
+      scale_fill_viridis_c(trans = "log", na.value = "black", breaks = loggy_breaks,
+                           labels = loggy_breaks, name = "Read\nDepth") +
+      scale_colour_viridis_c(trans = "log", na.value = "black", breaks = loggy_breaks,
+                             labels = loggy_breaks, name = "Read\nDepth") +
       theme(panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
             panel.background = element_blank(),
-            panel.border = element_blank())
+            panel.border = element_blank()) +
+        guides(colour = "none")
   }
 
   if(!is.na(het_outline_color)) {
     base <- base +
-      geom_tile(data = D2, aes(x = POSfact, y = Hfact, colour = isHet), fill = NA, size = het_outline_size) +
-      scale_colour_manual(values = c(Het = het_outline_color, Homoz = NA))
+      geom_tile(data = D2, aes(x = POSfact, y = Hfact, colour = isHet), fill = NA, size = het_outline_size)
   }
 
   # now calculate where the position bar should go.
@@ -222,12 +230,20 @@ haplo_raster_plot <- function(D, h_ord = NULL, pos_annot, fcolors,
 
   # now we add the annotation columns on if we want...
   if(!is.null(annotation_columns)) {
-    if(plot_read_depths == FALSE) {  # if not plotting read_depths then its all one simple layer
-      Ae <- expand_anno_cols(annotation_columns, length(unique(D2$POS))) %>%
-        mutate(Hfact = factor(hnames, levels = levels(D2$Hfact)))
+    if(plot_read_depths == FALSE) {  # if not plotting read_depths then its all one simple layer (Actually it isn't any longer since I went to the tile-based column annotations...)
+      #Ae <- expand_anno_cols(annotation_columns, length(unique(D2$POS))) %>%
+      #  mutate(Hfact = factor(hnames, levels = levels(D2$Hfact)))
 
-      g3 <- g2 +
-        geom_raster(data = Ae, mapping = aes(x = x, y = Hfact, fill = value))
+      #g3 <- g2 +
+      #  geom_tile(data = Ae, mapping = aes(x = x, y = Hfact, fill = value, colour = value))
+      Ae <- expand_anno_cols(annotation_columns, length(unique(D2$POS)))
+
+      tmp <- tile_based_column_annotations(Ae, levels(D2$Hfact), fcolors)
+      glines <- tmp$gglines
+      xxx_ace_split <- tmp$xxx_ace_split
+
+      g3 <- eval(parse(text = paste(c("g2", glines), collapse = " + ")))
+
     } else { # if plotting read depths then you have to do this hack to get discrete fills amongst your continuous fills
       Ae <- expand_anno_cols(annotation_columns, length(unique(D2$POS)))
 
@@ -245,11 +261,17 @@ haplo_raster_plot <- function(D, h_ord = NULL, pos_annot, fcolors,
   # now we add the annotation rows if we want
   if(!is.null(annotation_rows)) {
     if(plot_read_depths == FALSE) {  # if not plotting read_depths then its all one simple layer
-      ARe <- expand_anno_rows(annotation_rows, length(unique(D2$hnames)), start_shift = anno_row_start) %>%
-        mutate(POSfact = factor(POS, levels = levels(D2$POSfact)))
+      # ARe <- expand_anno_rows(annotation_rows, length(unique(D2$hnames)), start_shift = anno_row_start) %>%
+      #   mutate(POSfact = factor(POS, levels = levels(D2$POSfact)))
+      #
+      # g4 <- g3 +
+      #  geom_raster(data = ARe, mapping = aes(x = POSfact, y = y, fill = value))
+      ARe <- expand_anno_rows(annotation_rows, length(unique(D2$hnames)), start_shift = anno_row_start)
+      tmp <- tile_based_row_annotations(ARe, levels(D2$POSfact), fcolors)
+      glines <- tmp$gglines
+      xxx_are_split <- tmp$xxx_are_split
+      g4 <- eval(parse(text = paste(c("g3", glines), collapse = " + ")))
 
-      g4 <- g3 +
-        geom_raster(data = ARe, mapping = aes(x = POSfact, y = y, fill = value))
     } else {
 
       ARe <- expand_anno_rows(annotation_rows, length(unique(D2$hnames)), start_shift = anno_row_start)
@@ -276,6 +298,24 @@ haplo_raster_plot <- function(D, h_ord = NULL, pos_annot, fcolors,
     g5 <- eval(parse(text = paste(c("g4", sqtmp$gline), collapse = " + ")))
   } else {
     g5 <- g4
+  }
+
+  if(no_legend == TRUE) {
+    g5 <- g5 +
+      theme(legend.position="none")
+  }
+  if(no_y_labels == TRUE) {
+    g5 <- g5 +
+      theme(axis.text.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            axis.title.y = element_blank(),
+            axis.line.y = element_blank()
+      )
+  }
+  if(no_x_labels == TRUE) {
+    g5 <- g5 +
+      theme(axis.title.x = element_blank(),
+          axis.text.x = element_blank())
   }
 
   g5
@@ -314,7 +354,7 @@ expand_anno_cols <- function(A, n) {
 }
 
 
-
+#' Find x,y of the midpoint of each annotation column, and return with the names to print.
 
 
 
@@ -383,7 +423,7 @@ tile_based_column_annotations <- function(ace, h_ord, fcolors) {
   # then make a bunch of geom_tile lines that we will want to bung together with pluses and eval:
   gglines <- unlist(
     lapply(seq_along(ace_split), function(n) {
-      paste0("ggplot2::geom_tile(data = xxx_ace_split[[", n, "]], mapping = ggplot2::aes(x = x, y = y, width = 1, height = 1), fill = \"", ace_split[[n]]$color[1] , "\")")
+      paste0("ggplot2::geom_tile(data = xxx_ace_split[[", n, "]], mapping = ggplot2::aes(x = x, y = y, width = 1, height = 1), fill = \"", ace_split[[n]]$color[1] , "\", colour = \"", ace_split[[n]]$color[1] , "\")")
     })
   )
 
@@ -425,7 +465,7 @@ tile_based_row_annotations <- function(are, pos_values, fcolors) {
   # then make a bunch of geom_tile lines that we will want to bung together with pluses and eval:
   gglines <- unlist(
     lapply(seq_along(are_split), function(n) {
-      paste0("ggplot2::geom_tile(data = xxx_are_split[[", n, "]], mapping = ggplot2::aes(x = x, y = y, width = 1, height = 1), fill = \"", are_split[[n]]$color[1] , "\")")
+      paste0("ggplot2::geom_tile(data = xxx_are_split[[", n, "]], mapping = ggplot2::aes(x = x, y = y, width = 1, height = 1), fill = \"", are_split[[n]]$color[1] , "\", colour = \"", are_split[[n]]$color[1] , "\")")
     })
   )
 
@@ -469,4 +509,6 @@ snp_quant_ggplot_calls <-function(Q,
 
   list(gline = paste(bg, vals, sep = " + "),
        xxx_SQuant = Q2)
-  }
+}
+
+

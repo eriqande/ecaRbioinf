@@ -2,7 +2,8 @@
 % Please edit documentation in R/haplo_raster_plot.R
 \name{expand_anno_rows}
 \alias{expand_anno_rows}
-\title{helper function specific to haplo_raster_plot.}
+\title{Find x,y of the midpoint of each annotation column, and return with the names to print.
+helper function specific to haplo_raster_plot.}
 \usage{
 expand_anno_rows(A, n, start_shift = 0)
 }

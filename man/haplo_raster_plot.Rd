@@ -12,7 +12,8 @@ haplo_raster_plot(D, h_ord = NULL, pos_annot, fcolors,
   het_outline_size = 1, plot_read_depths = FALSE,
   annotation_columns = NULL, annotation_rows = NULL,
   anno_row_start = 0, snp_quant_tibble = NULL, sq_props = list(lo =
-  -9, hi = -1))
+  -9, hi = -1), no_legend = FALSE, no_y_labels = FALSE,
+  no_x_labels = TRUE)
 }
 \arguments{
 \item{D}{a tibble with a column \code{POS} that is the positions of the

@@ -63,8 +63,8 @@ vcf_haplos2tidy <- function(V, Anc = NULL) {
       dplyr::select(ChromKey, POS, allele) %>%
       dplyr::rename(anc_allele = allele)
 
-    vta <- left_join(vtp, ancy, by = c("ChromKey", "POS")) %>%
-      mutate(anc_vs_derived = ifelse(allele == anc_allele, "A", "D")) %>%
+    vta <- dplyr::left_join(vtp, ancy, by = c("ChromKey", "POS")) %>%
+      dplyr::mutate(anc_vs_derived = ifelse(allele == anc_allele, "A", "D")) %>%
       dplyr::select(-allele, -anc_allele) %>%
       dplyr::filter(Indiv != Anc)
 

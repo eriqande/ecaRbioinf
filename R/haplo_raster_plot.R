@@ -25,6 +25,9 @@
 #' @param highlight_pos a tibble with a column named "POS" of SNP positions and column named "name"
 #' which holds the name for SNPs that should be highlighted by surrounding
 #' the columns by a dotted line.
+#' @param kinky_highlight_pos just like highlight_pos, but operates separately to color
+#' the kinky lines for highlighted positions that overlap with the columns.
+#' @param kinky_highlight_color By default this is red.
 #' @param pos_bar_height what fraction of the vertical plot area should we find the position
 #' line above the plot area?
 #' @param kink_frac the fraction of the pos_bar_height at which the marker lines should kink.
@@ -84,6 +87,8 @@
 #'      dplyr::left_join(utj, by = c("POS", "Indiv"))
 haplo_raster_plot <- function(D, h_ord = NULL, pos_annot, fcolors,
                               highlight_pos = NULL,
+                              kinky_highlight_pos = NULL,
+                              kinky_highlight_color = "red",
                               yaxis_name = "Haplotype",
                               xaxis_name = "SNP",
                               pos_bar_height = 0.10,
@@ -225,8 +230,25 @@ haplo_raster_plot <- function(D, h_ord = NULL, pos_annot, fcolors,
                                              yend = topHY),
                                              size = 0.5,
                                              colour = "darkorchid1")
-
   }
+
+  # Here we have a new feature. Any highlight_position that is a perfect match
+  # with one of the variants will get its kinky line colored red.  We will pass
+  # the table of these highlight positions in separately so that we can
+  # do them separately, as desired.
+  if(!is.null(kinky_highlight_pos)) {
+    # get only the highlight positions that are a perfect match with the columns
+    postib2 <- postib %>%
+      semi_join(kinky_highlight_pos, by = c("pos" = "POS"))
+
+    if(nrow(postib2) > 0) {
+      g2 <- g2 +
+        geom_segment(data = postib2, mapping = aes(x = plotx, xend = plotx, y = topHY, yend = kinkYlo), size = kinky_line_size, color = kinky_highlight_color) +
+        geom_segment(data = postib2, mapping = aes(x = plotx, xend = x, y = kinkYlo, yend = kinkYhi), size = kinky_line_size, color = kinky_highlight_color) +
+        geom_segment(data = postib2, mapping = aes(x = x, xend = x, y = kinkYhi, yend = pbY), size = kinky_line_size, color = kinky_highlight_color)
+    }
+  }
+
 
   # now we add the annotation columns on if we want...
   if(!is.null(annotation_columns)) {

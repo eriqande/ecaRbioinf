@@ -5,15 +5,16 @@
 \title{make a raster plot of allelic types on haplotypes}
 \usage{
 haplo_raster_plot(D, h_ord = NULL, pos_annot, fcolors,
-  highlight_pos = NULL, yaxis_name = "Haplotype", xaxis_name = "SNP",
-  pos_bar_height = 0.1, pos_bar_text_size = 1, lo_kink_frac = 0.2,
-  hi_kink_frac = 0.2, tick_frac = 0.1, expand_top = 0.1,
-  expand_width = 0, kinky_line_size = 0.1, het_outline_color = NA,
-  het_outline_size = 1, plot_read_depths = FALSE,
-  annotation_columns = NULL, annotation_rows = NULL,
-  anno_row_start = 0, snp_quant_tibble = NULL, sq_props = list(lo =
-  -9, hi = -1), no_legend = FALSE, no_y_labels = FALSE,
-  no_x_labels = TRUE)
+  highlight_pos = NULL, kinky_highlight_pos = NULL,
+  kinky_highlight_color = "red", yaxis_name = "Haplotype",
+  xaxis_name = "SNP", pos_bar_height = 0.1, pos_bar_text_size = 1,
+  lo_kink_frac = 0.2, hi_kink_frac = 0.2, tick_frac = 0.1,
+  expand_top = 0.1, expand_width = 0, kinky_line_size = 0.1,
+  het_outline_color = NA, het_outline_size = 1,
+  plot_read_depths = FALSE, annotation_columns = NULL,
+  annotation_rows = NULL, anno_row_start = 0,
+  snp_quant_tibble = NULL, sq_props = list(lo = -9, hi = -1),
+  no_legend = FALSE, no_y_labels = FALSE, no_x_labels = TRUE)
 }
 \arguments{
 \item{D}{a tibble with a column \code{POS} that is the positions of the
@@ -38,6 +39,11 @@ them, too, for example: fcolors <- c(S = "yellow", F = "blue", spring = "yellow"
 \item{highlight_pos}{a tibble with a column named "POS" of SNP positions and column named "name"
 which holds the name for SNPs that should be highlighted by surrounding
 the columns by a dotted line.}
+
+\item{kinky_highlight_pos}{just like highlight_pos, but operates separately to color
+the kinky lines for highlighted positions that overlap with the columns.}
+
+\item{kinky_highlight_color}{By default this is red.}
 
 \item{pos_bar_height}{what fraction of the vertical plot area should we find the position
 line above the plot area?}

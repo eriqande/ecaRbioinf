@@ -1,0 +1,74 @@
+---
+title: "Explore Covariance Calculation in Single Read Sampling PCA"
+output: html_notebook
+---
+
+Just making some pictures of the values that you see contributing to the 
+covariance calculation in ANGSD's single-read-sampling method.
+
+Recall, for indivs $i$ and $j$, the calculation of the covariance is:
+$$
+\mathrm{Cov}(i,j) = \frac{1}{M} \sum_{i=1}^M \frac{(h_i - f)(h_j - f)}{f(1-f)}
+$$
+where $f$ is the frequency of, say, the $A$ allele in the data set (computed by
+summing up SNPs on the singly-sampled reads) and $h_i$ ($h_j$) is 1 if $i$'s ($j$'s)
+sampled read is $A$ and 0 otherwise.
+
+So, I want to look at how the summands differ across different allele frequencies.
+First, I look just at the numerator for $f$ going from 0.005 to 0.995.
+
+```{r}
+library(tidyverse)
+
+x <- seq(0.005, 0.995, by = 0.005)
+lx <- length(x)
+summands <- tibble(
+  f = rep(x, times = 3),
+  h_i = c(rep(0, 2 * lx), rep(1, lx)),
+  h_j = c(rep(0, lx), rep(1, 2 * lx)),
+  numer = (h_i - f) * (h_j - f),
+  denom = f * (1 - f),
+  case = str_c(h_i, h_j),
+  fract = numer / denom,
+  null_prob = (h_i * f + (1 - h_i) * (1 - f))  * (h_j * f + (1 - h_j) * (1 - f))
+)
+```
+
+Now, have a look at those values:
+```{r}
+ggplot(summands, aes(x = f, y = fract, colour = case)) +
+  geom_line()
+```
+
+OK, that is what we expect.  What is interesting about looking at it, though, is that
+it suggests that the variance of the estimated covariance could increase as you
+consider SNPs with more rare alleles.  
+
+But I wonder about the expected variance from these things when you imagine that there
+is no population structure.   We can compute that by taking the expectation of "fract" given
+the allele frequencies.  Remember this is in a case of absolutely no population structure.
+Basically, with no population structure, I want to compute the expected values and the
+variances of the summands for each different allele frequency.  These will be conditional
+means and variances.
+```{r}
+no_structure <- summands %>% 
+  group_by(f) %>%
+  summarise(mean_of_covar =  sum(fract * null_prob),
+            var_of_covar = sum( null_prob * (fract - mean_of_covar)^2 ))
+no_structure
+```
+
+So, let's plot those:
+```{r}
+no_structure %>%
+  gather(key = "measure", value = "value", -f) %>%
+ggplot(aes(x = f, y = value, colour = measure)) +
+  geom_line()
+```
+
+It seems that there must be some way to choose an allele frequency cutoff for certain
+pairs of individuals, which will depend on the number of sites they have non-missing, 
+in common, but, that probably won't really work very well.  
+
+But, before I do that, I think that I will just put an allele frequency
+cutoff into the function...

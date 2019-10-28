@@ -18,3 +18,14 @@ NULL
 #' @importFrom dplyr filter mutate select arrange group_by summarise
 #' @importFrom ggplot2 aes geom_raster ggplot  scale_fill_manual theme
 NULL
+
+
+## usethis namespace: start
+#' @importFrom Rcpp sourceCpp
+## usethis namespace: end
+NULL
+
+## usethis namespace: start
+#' @useDynLib ecaRbioinf, .registration = TRUE
+## usethis namespace: end
+NULL

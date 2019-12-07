@@ -27,14 +27,16 @@ rcpp_hello <- function() {
 #'
 #' \code{bcftools view -m 2 -M 2 --min-af 0.05 --max-af 0.95 -i 'F_MISSING < 0.5' raw.vcf > filtered.vcf}
 #'
-#' 2. Then extract the allele depths out of that and turn the allele depths into
-#' two integers for every individual.  So, each row has 2 * N whitespace separated values
-#' on it, (where N is the number of individuals).  This assumes that the allele depths
+#' 2. Then extract the allele depths out of that. The will look like 0,1 or 2,1 or,
+#' if they are missing, they will just be a dot, ".".   So, each row has 2 + N whitespace
+#' separated values
+#' on it, (where N is the number of individuals). The first two words on each row
+#' are Chrom and Pos.  This assumes that the allele depths
 #' are comma-separated, and that sites missing reads are denoted by a period:
 #'
 #' \code{bcftools query -f '\%CHROM\t\%POS[\t\%AD]\n' filtered.vcf > allele_depths.txt}
 #'
-#' 3. You ought to check that allele_depths has the right number of "words" in it.  So, you
+#' 3. You might want to check that allele_depths has the right number of "words" in it.  So, you
 #' would do \code{wc allele_depths.txt}, and confirm that the second number in the output
 #' is equal to \eqn{(N + 2) * L}, where \eqn{N} is the number of individuals (samples)
 #' in the data set, filtered.vcf, and \eqn{L} is the number of markers in filtered.vcf.
@@ -50,7 +52,14 @@ rcpp_hello <- function() {
 #' @param freq_thresh loci with the frequency of either allele estimated (by the fraction
 #' of sampled single reads of each type) less than freq_thresh will not be used.
 #'
-#' @return This passes back an N x N covariance matrix.
+#' @return This passes back a list that includes an N x N covariance matrix ($Cov); a martrix of
+#' proportion of sampled reads identical by state between individuals ($IBS); a matrix of
+#' number of sites having at least one read in both individuals of the pair ($M); the sample names,
+#' the frequency threshold used in this function; and a report about the total number of loci
+#' investigated and used.
+#'
+NULL
+
 #'
 #' @export
 single_read_sampling_from_allele_depths <- function(file, sample_names, freq_thresh = 0.0) {

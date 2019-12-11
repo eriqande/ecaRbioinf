@@ -25,4 +25,10 @@ likely going to have to do more than once.  In some cases there are probably
 Unix tools that do these things, but I couldn't find them, and, in some cases,
 I was surprised at how quickly and efficiently R could handle some things.
 
+You can install it like this:
+```{r, eval=FALSE}
+# install.packages("remotes")  #  <-- Do this if you don't have the 'remotes' package
+remotes::install_github("eriqande/ecaRbioinf")
+```
+
 

@@ -15,7 +15,7 @@ NULL
 
 
 #' @importFrom rlang .data
-#' @importFrom dplyr filter mutate select arrange group_by summarise
+#' @importFrom dplyr filter mutate select arrange group_by summarise n
 #' @importFrom ggplot2 aes geom_raster ggplot  scale_fill_manual theme
 NULL
 

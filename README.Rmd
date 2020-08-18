@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 ```
 
 
-
+[![DOI](https://zenodo.org/badge/181240768.svg)](https://zenodo.org/badge/latestdoi/181240768)
 
 
 This is an R package for performing small bioinformatic tasks that I am

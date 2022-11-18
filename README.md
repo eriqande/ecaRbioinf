@@ -1,6 +1,6 @@
-\# ecaRbioinf – a few functions to do bioinformatic tasks
+ecaRbioinf – a few functions to do bioinformatic tasks
 ================
-18 August, 2020
+August 18 2020
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -12,10 +12,18 @@ probably Unix tools that do these things, but I couldn’t find them, and,
 in some cases, I was surprised at how quickly and efficiently R could
 handle some things.
 
-You can install it like
-this:
+There are also likely BioConductor solutions for many of these.
+
+You can install it like this:
 
 ``` r
 # install.packages("remotes")  #  <-- Do this if you don't have the 'remotes' package
 remotes::install_github("eriqande/ecaRbioinf")
 ```
+
+Online help files can be found at:
+
+<https://eriqande.github.io/ecaRbioinf>
+
+Sorry! No vignettes, but at least the help files are somewhat put
+together.
